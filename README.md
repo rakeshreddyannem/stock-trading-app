@@ -22,7 +22,7 @@ graph TD
     end
 
     subgraph Database [Database & External API]
-        Models --> MongoDB[(MongoDB Database)]
+        Models --> MongoDB[("MongoDB Database")]
         Cache --> Finnhub[Finnhub Live Stock API]
     end
 
@@ -42,25 +42,24 @@ The system employs a relational Mongoose schema structure modeled in MongoDB. Re
 
 ```mermaid
 erDiagram
+    USER ||--o{ STOCK_ORDER : "places"
     USER ||--o{ PORTFOLIO : "owns"
-    USER ||--o{ STOCK-ORDER : "places"
     USER ||--o{ TRANSACTION : "makes"
-    PORTFOLIO ||--o{ STOCK-ORDER : "references"
+    PORTFOLIO ||--o{ STOCK_ORDER : "references"
     PORTFOLIO }|--|{ HOLDING : "contains"
-    STOCK ||--o{ HOLDING : "matches ticker"
 
     USER {
         ObjectId _id PK
         string username
         string email
         string password
-        string userType "user | admin"
+        string userType
         number virtualCashBalance
     }
 
     PORTFOLIO {
         ObjectId _id PK
-        ObjectId userId FK "ref: User"
+        ObjectId userId FK
         string portfolioName
         array holdings
     }
@@ -74,7 +73,7 @@ erDiagram
 
     STOCK {
         ObjectId _id PK
-        string ticker "unique"
+        string ticker
         string companyName
         number currentPrice
         number marketCap
@@ -82,25 +81,25 @@ erDiagram
         date lastUpdated
     }
 
-    STOCK-ORDER {
+    STOCK_ORDER {
         ObjectId _id PK
-        ObjectId userId FK "ref: User"
-        ObjectId portfolioId FK "ref: Portfolio"
+        ObjectId userId FK
+        ObjectId portfolioId FK
         string ticker
         string companyName
         number price
         number count
         number totalPrice
         string stockType
-        string orderType "BUY | SELL"
-        string orderStatus "COMPLETED | PENDING | FAILED"
+        string orderType
+        string orderStatus
     }
 
     TRANSACTION {
         ObjectId _id PK
-        ObjectId userId FK "ref: User"
-        string transactionType "BUY | SELL"
-        string paymentMode "VIRTUAL_CASH"
+        ObjectId userId FK
+        string transactionType
+        string paymentMode
         number amount
         date time
     }
@@ -138,7 +137,7 @@ The typical journey of a user interacting with the platform is modeled as follow
 
 ```mermaid
 graph TD
-    Start([Launch App]) --> CheckSession{Session Cached?}
+    Start([Launch App]) --> CheckSession{"Session Cached?"}
     
     CheckSession -- No --> AuthPage[Register / Login]
     AuthPage --> AuthSuccess[Authenticate & Store JWT]
@@ -153,9 +152,9 @@ graph TD
     ExploreStocks --> OptionSandbox[Strategy Sandbox]
     ExploreStocks --> OptionHistory[Review History]
     
-    OptionTrade --> ChooseType{Buy or Sell?}
-    ChooseType -- BUY --> ExecuteBuy[Check Balance -> Deduct Cash -> Update Holdings -> Create Order]
-    ChooseType -- SELL --> ExecuteSell[Check Quantity -> Add Cash -> Update Holdings -> Create Order]
+    OptionTrade --> ChooseType{"Buy or Sell?"}
+    ChooseType -- BUY --> ExecuteBuy["Check Balance -> Deduct Cash -> Update Holdings -> Create Order"]
+    ChooseType -- SELL --> ExecuteSell["Check Quantity -> Add Cash -> Update Holdings -> Create Order"]
     
     ExecuteBuy --> ViewLedger[View Order & Transaction Ledger]
     ExecuteSell --> ViewLedger
