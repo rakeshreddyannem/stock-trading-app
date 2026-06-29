@@ -1,6 +1,6 @@
-# Virtual Stock Trading Application
+# SB Stocks - Virtual Stock Trading Application
 
-A feature-rich, full-stack Virtual Stock Trading Application designed to simulate real-world stock trading. The application utilizes a modern React frontend and a Node.js/Express/MongoDB backend, featuring live stock price caching via the Finnhub API and a Strategy Sandbox simulator for backtesting.
+A feature-rich, full-stack Virtual Stock Trading Application designed to simulate real-world stock trading. The application utilizes a modular React frontend (Vite) and a Node.js/Express/MongoDB backend, featuring live stock price caching via the Finnhub API, a Strategy Sandbox simulator for backtesting, and production-grade security hardening.
 
 ---
 
@@ -10,13 +10,17 @@ The application is built using a decoupled Client-Server architecture. The front
 
 ```mermaid
 graph TD
-    subgraph Client [React Frontend]
-        V[Vite / React UI] --> ApiClient[API Client - api.jsx]
+    subgraph Client [React Frontend - Vite]
+        App[App.jsx] --> Router[Custom Page Router]
+        Router --> Pages[Pages / Components]
+        Pages --> Context[GeneralContext.jsx]
+        Context --> Axios[AxiosInstance.js]
     end
 
     subgraph Server [Node.js / Express Backend]
-        Router[Express Routes] --> Middleware[Auth Middleware]
-        Middleware --> Controller[Controllers]
+        Routes[Express Routes] --> SecMiddle[Security & Rate Limit Middleware]
+        SecMiddle --> AuthMiddle[Auth & RBAC Middleware]
+        AuthMiddle --> Controller[Controllers]
         Controller --> Models[Mongoose Models]
         Controller --> Cache[Memory Cache / DB Cache]
     end
@@ -26,13 +30,28 @@ graph TD
         Cache --> Finnhub[Finnhub Live Stock API]
     end
 
-    ApiClient -- REST API / JWT --> Router
+    Axios -- REST API / JWT --> Routes
 ```
 
 ### Key Architectural Characteristics
-- **State Management & Caching:** The server caches live stock prices retrieved from the Finnhub API for **1 minute** inside MongoDB to stay within rate limits and optimize latency.
-- **Security:** Session management is handled using JSON Web Tokens (JWT) signed by the backend and stored in the client's local storage.
-- **Strategy Sandbox:** Run client-side arithmetic Brownian motion simulations to project stock values over 90 days for backtesting strategies (like DCA and Bracket orders).
+- **Modular Design**: The frontend is split into structured folders for components, pages, and a global state context provider.
+- **State Management & Caching**: The server caches live stock prices retrieved from the Finnhub API for **1 minute** inside MongoDB to stay within rate limits and optimize latency.
+- **Session Security**: Session management is handled using JSON Web Tokens (JWT) signed by the backend and stored in the client's local storage, with an authorization interceptor in Axios.
+- **Strategy Sandbox**: Run client-side arithmetic Brownian motion simulations to project stock values over 90 days for backtesting strategies (like DCA and Bracket orders).
+
+---
+
+## 🛡️ Security Hardening Features
+
+The application incorporates a robust security profile implemented natively on the MERN stack:
+1. **Login Lockout Protection**: Accounts are temporarily locked for 15 minutes after 5 consecutive failed login attempts to prevent brute-force attacks.
+2. **Multi-Factor Authentication (MFA)**: Built-in Time-based One-Time Password (TOTP) security using the standard `speakeasy` package, generating setup QR codes via `qrcode` and validating codes on login.
+3. **Cryptographic Signup Verification**: Users are registered as unverified and must activate their account using a secure, cryptographically random token sent via URL parameters.
+4. **NoSQL Injection Prevention**: Integrated `express-mongo-sanitize` on the backend to filter all user payloads.
+5. **HTTP Header & CORS Locks**: Loaded `helmet` to automate security headers, and restricted CORS origins strictly to `http://localhost:5173`.
+6. **API Rate Limiters**: Restricts general API requests to 100 requests per 15 minutes, and authentication routes to 5 requests per minute.
+7. **Production Error Masking**: Custom global exception middleware prevents backend source stack traces from leaking to clients.
+8. **Winston Audit Loggers**: Security incidents (lockouts, 2FA setup, failed logins) are recorded in `server/logs/security.log`, while runtime exceptions write to `server/logs/error.log`.
 
 ---
 
@@ -55,6 +74,11 @@ erDiagram
         string password
         string userType
         number virtualCashBalance
+        boolean isVerified
+        boolean isMfaEnabled
+        string mfaSecret
+        integer failedLoginAttempts
+        date lockUntil
     }
 
     PORTFOLIO {
@@ -111,7 +135,7 @@ erDiagram
 
 1. **User Authentication & Session Management:**
    - Registration and Login with encrypted passwords (via `bcrypt`).
-   - JWT-based persistent sessions.
+   - JWT-based persistent sessions with short-lived tokens (1 hour).
 2. **Multi-Portfolio Management:**
    - Create custom portfolios to organize and isolate different investment approaches.
    - Live tracking of holdings, average purchase price, and total valuation.
@@ -131,105 +155,100 @@ erDiagram
 
 ---
 
-## 🔄 User Flow
+## 👑 Access Roles
 
-The typical journey of a user interacting with the platform is modeled as follows:
-
-```mermaid
-graph TD
-    Start([Launch App]) --> CheckSession{"Session Cached?"}
-    
-    CheckSession -- No --> AuthPage[Register / Login]
-    AuthPage --> AuthSuccess[Authenticate & Store JWT]
-    
-    CheckSession -- Yes --> Dashboard[Dashboard View]
-    AuthSuccess --> Dashboard
-    
-    Dashboard --> SelectPortfolio[Select or Create Portfolio]
-    SelectPortfolio --> ExploreStocks[View Live Stock Listing]
-    
-    ExploreStocks --> OptionTrade[Place Trade]
-    ExploreStocks --> OptionSandbox[Strategy Sandbox]
-    ExploreStocks --> OptionHistory[Review History]
-    
-    OptionTrade --> ChooseType{"Buy or Sell?"}
-    ChooseType -- BUY --> ExecuteBuy["Check Balance -> Deduct Cash -> Update Holdings -> Create Order"]
-    ChooseType -- SELL --> ExecuteSell["Check Quantity -> Add Cash -> Update Holdings -> Create Order"]
-    
-    ExecuteBuy --> ViewLedger[View Order & Transaction Ledger]
-    ExecuteSell --> ViewLedger
-    
-    OptionSandbox --> ConfigStrategy[Configure DCA / Bracket Order]
-    ConfigStrategy --> RunSim[Run 90-Day Simulation]
-    RunSim --> ShowResults[Display Profit/Loss Projections]
-    
-    OptionHistory --> HistoryTabs[Switch between Orders & Transactions]
-```
+- **Standard User (Trader):** Can register, manage portfolios, trade mock stocks, view cash balances, run strategy simulations, setup 2FA, and check personal order/transaction history.
+- **Admin:** Holds elevated privileges. Can view the **Admin Panel** to monitor total system liquidity, comparative index charts, all user account parameters (including verification and MFA status), and all global order and transaction logs.
 
 ---
 
-## 👥 Roles and Responsibilities
+## 🛠️ File Structure
 
-### User Access Roles
-- **Standard User:** Can register, manage portfolios, trade mock stocks, view cash balances, run strategy simulations, and check personal order/transaction history.
-- **Admin:** Holds elevated privileges. In addition to regular user abilities, admins can fetch portfolio information across any user boundary for administrative auditing.
-
-### System Layer Responsibilities
-
-| Layer / Component | Primary Responsibilities |
-| :--- | :--- |
-| **Frontend (React Client)** | Renders interactive charts/tables, performs client-side validation, handles local storage sessions, runs sandbox simulations, and connects to the backend API. |
-| **Backend (Express Server)** | Exposes REST endpoints, validates JWT authentication, manages database connection pools, fetches and caches external API pricing. |
-| **Database (MongoDB)** | Persists records for users, portfolios, stocks, transaction histories, and orders. Enforces data integrity through Mongoose schemas. |
-
----
-
-## 🛠️ MVC (Model-View-Controller) Pattern Implementation
-
-The backend follows the standard **MVC (Model-View-Controller)** pattern (with the client UI acting as the View layer) to separate concerns and ensure maintainable code.
+The project follows a modular, organized MERN structure:
 
 ```
 📁 stock-trading-app
-├── 📁 client
-│   └── 📁 src
-│       ├── App.jsx             <-- VIEW (React User Interface)
-│       └── api.jsx             <-- API client layer connecting View to Controllers
-└── 📁 server
+├── 📁 client                   <-- FRONTEND REACT APP (Vite)
+│   ├── 📁 public
+│   │   ├── hero-illustration.png
+│   │   └── logo.png            <-- Custom Brand Logo & Favicon
+│   ├── 📁 src
+│   │   ├── 📁 components       <-- Shared UI components
+│   │   │   ├── axiosInstance.js
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   └── Navbar.jsx
+│   │   ├── 📁 context          <-- Global context state provider
+│   │   │   └── GeneralContext.jsx
+│   │   ├── 📁 pages            <-- Route Page views
+│   │   │   ├── Landing.jsx
+│   │   │   ├── Home.jsx
+│   │   │   ├── Portfolio.jsx
+│   │   │   ├── Profile.jsx
+│   │   │   ├── History.jsx
+│   │   │   ├── StockChart.jsx
+│   │   │   ├── Admin.jsx
+│   │   │   ├── Users.jsx
+│   │   │   ├── AllOrders.jsx
+│   │   │   ├── AllTransactions.jsx
+│   │   │   └── AdminStockChart.jsx
+│   │   ├── App.jsx             <-- View Router Orchestrator
+│   │   ├── App.css             <-- Custom styling rules
+│   │   └── main.jsx
+│   └── index.html
+└── 📁 server                   <-- BACKEND EXPRESS SERVER
+    ├── 📁 logs                 <-- Winston Log folder
+    │   ├── error.log
+    │   └── security.log
     └── 📁 src
-        ├── 📁 models           <-- MODEL (Database schemas & data representations)
-        │   ├── userModel.js
-        │   ├── portfolioModel.js
-        │   ├── stockSchema.js
-        │   ├── orderSchema.js
-        │   └── transactionModel.js
-        ├── 📁 routes           <-- ROUTER (Bridges HTTP endpoints to Controllers)
-        │   ├── userRoute.js
-        │   ├── orderRoute.js
-        │   ├── stockRoute.js
-        │   └── transactionRoute.js
-        └── 📁 controllers      <-- CONTROLLER (Core business logic orchestrating Models & Views)
-            ├── userController.js
-            ├── orderController.js
-            ├── stockController.js
-            └── transactionController.js
+        ├── 📁 models           <-- Mongoose Database Schemas
+        ├── 📁 routes           <-- Router routes
+        ├── 📁 controllers      <-- Business logic handlers
+        ├── 📁 middlewares      <-- Auth, admin validation, & security middlewares
+        ├── config/db.js        <-- DB Connection & Seeding script
+        └── server.js           <-- Server start core
 ```
 
-### 1. Model
-Defines the database schema structure, validators, and relationships using Mongoose.
-* **Location:** [server/src/models/](file:///d:/All%20projects/Virtual-Stock-Trading-App/server/src/models/)
-* **Example:** `userModel.js` specifies fields like `username`, `email`, `password`, `userType`, and `virtualCashBalance`, ensuring required validation.
+---
 
-### 2. View
-The visual interface for users to interact with. Built using React and styled with custom CSS.
-* **Location:** [client/src/App.jsx](file:///d:/All%20projects/Virtual-Stock-Trading-App/client/src/App.jsx)
-* **Description:** Represents dynamic component states for dashboards, stock price lists, trading modals, historical grids, and visual simulation charts (via SVGs).
+## ⚙️ Setup & Running Locally
 
-### 3. Controller
-Contains the business logic to process requests, interact with models, and return appropriate responses.
-* **Location:** [server/src/controllers/](file:///d:/All%20projects/Virtual-Stock-Trading-App/server/src/controllers/)
-* **Example:** `orderController.js` handles placing trade orders by validating virtual cash balances, updating portfolios, modifying user balances, and logging transaction events.
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v16+ recommended)
+- [MongoDB](https://www.mongodb.com/) installed locally and running on port `27017`
 
-### 4. Router (Bridge)
-Directs HTTP requests from the View (via the API client) to the correct controller methods.
-* **Location:** [server/src/routes/](file:///d:/All%20projects/Virtual-Stock-Trading-App/server/src/routes/)
-* **Example:** `orderRoute.js` maps `POST /api/trade/order` to `orderController.createOrder`.
+### 1. Backend Server Configuration
+1. Open a terminal and navigate to the server folder:
+   ```bash
+   cd server
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the `server` root directory:
+   ```env
+   PORT=5000
+   MONGO_URI=mongodb://localhost:27017/stock_trading_db
+   JWT_SECRET=your_super_secret_key_here
+   FINNHUB_API_KEY=your_finnhub_api_key_here
+   ```
+4. Start the backend server:
+   ```bash
+   npm start
+   ```
+
+### 2. Frontend Client Configuration
+1. Open a new terminal and navigate to the client folder:
+   ```bash
+   cd client
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+4. Open your browser and navigate to `http://localhost:5173/`.
