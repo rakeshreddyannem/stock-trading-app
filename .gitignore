@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Environment variables (NEVER push secrets to GitHub)
+.env
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+client/dist/
