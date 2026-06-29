@@ -245,7 +245,7 @@ The project follows a modular, organized MERN structure:
 3. Create a `.env` file in the `server` root directory:
    ```env
    PORT=5000
-   MONGO_URI=mongodb://localhost:27017/stock_trading_db
+   MONGO_URI=your_mongodb_uri_here
    JWT_SECRET=your_super_secret_key_here
    FINNHUB_API_KEY=your_finnhub_api_key_here
    ```
