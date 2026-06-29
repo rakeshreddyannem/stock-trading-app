@@ -39,6 +39,22 @@ graph TD
 - **Session Security**: Session management is handled using JSON Web Tokens (JWT) signed by the backend and stored in the client's local storage, with an authorization interceptor in Axios.
 - **Strategy Sandbox**: Run client-side arithmetic Brownian motion simulations to project stock values over 90 days for backtesting strategies (like DCA and Bracket orders).
 
+### 1. Model
+Defines the database schema structure, validators, and relationships using Mongoose.
+* **Example:** `userModel.js` specifies fields like `username`, `email`, `password`, `userType`, and `virtualCashBalance`, ensuring required validation.
+
+### 2. View
+The visual interface for users to interact with. Built using React and styled with custom CSS.
+* **Description:** Represents dynamic component states for dashboards, stock price lists, trading modals, historical grids, and visual simulation charts (via SVGs).
+
+### 3. Controller
+Contains the business logic to process requests, interact with models, and return appropriate responses.
+* **Example:** `orderController.js` handles placing trade orders by validating virtual cash balances, updating portfolios, modifying user balances, and logging transaction events.
+
+### 4. Router (Bridge)
+Directs HTTP requests from the View (via the API client) to the correct controller methods.
+* **Example:** `orderRoute.js` maps `POST /api/trade/order` to `orderController.createOrder`.
+
 ---
 
 ## 🛡️ Security Hardening Features
