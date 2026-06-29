@@ -1,4 +1,4 @@
-const { User, Portfolio } = require('../Schemas');
+const { User, Portfolio, Transaction } = require('../Schemas');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -446,6 +446,57 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+const depositFunds = async (req, res) => {
+    try {
+        const { amount, paymentMode } = req.body;
+        const userId = req.user.id;
+
+        if (!amount || isNaN(amount) || amount <= 0) {
+            return res.status(400).json({ message: 'Please provide a valid deposit amount greater than zero' });
+        }
+
+        const allowedModes = ['UPI', 'NET_BANKING', 'CARD'];
+        if (!paymentMode || !allowedModes.includes(paymentMode)) {
+            return res.status(400).json({ message: 'Invalid payment method selected' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.virtualCashBalance += parseFloat(amount);
+        await user.save();
+
+        await Transaction.create({
+            userId,
+            transactionType: 'DEPOSIT',
+            paymentMode,
+            amount: parseFloat(amount)
+        });
+
+        logger.info(`User ${user.email} virtually deposited $${amount} via ${paymentMode}`);
+
+        const updatedUser = {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            userType: user.userType,
+            virtualCashBalance: user.virtualCashBalance,
+            isVerified: user.isVerified,
+            isMfaEnabled: user.isMfaEnabled
+        };
+
+        res.json({
+            message: `Successfully deposited $${amount} virtually!`,
+            user: updatedUser
+        });
+    } catch (error) {
+        logger.error(`Virtual deposit error: ${error.message}`);
+        res.status(500).json({ message: 'Failed to process virtual deposit' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -459,5 +510,6 @@ module.exports = {
     verifyMfa,
     disableMfa,
     loginVerifyMfa,
-    getAllUsers
+    getAllUsers,
+    depositFunds
 };

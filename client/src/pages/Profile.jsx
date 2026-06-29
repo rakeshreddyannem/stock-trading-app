@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { GeneralContext } from '../context/GeneralContext';
 
 export default function Profile() {
@@ -13,59 +13,333 @@ export default function Profile() {
     handleResendVerification,
     handleSetupMfa,
     handleVerifyEnableMfa,
-    handleDisableMfa
+    handleDisableMfa,
+    handleDeposit
   } = useContext(GeneralContext);
 
+  const [paymentMode, setPaymentMode] = useState('UPI');
+  const [depositAmount, setDepositAmount] = useState(5000);
+  const [upiId, setUpiId] = useState('');
+  const [selectedBank, setSelectedBank] = useState('State Bank of India');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+  const [formError, setFormError] = useState('');
+
+  const handleVirtualDepositSubmit = async (e) => {
+    e.preventDefault();
+    setFormSuccess('');
+    setFormError('');
+
+    if (depositAmount <= 0) {
+      setFormError('Please enter a valid deposit amount greater than zero.');
+      return;
+    }
+
+    // Basic validations for simulated credentials
+    if (paymentMode === 'UPI') {
+      if (!upiId.trim() || !upiId.includes('@')) {
+        setFormError('Please enter a valid UPI ID (e.g. user@upi).');
+        return;
+      }
+    } else if (paymentMode === 'CARD') {
+      const cleanCard = cardNumber.replace(/\s/g, '');
+      if (cleanCard.length !== 16 || isNaN(cleanCard)) {
+        setFormError('Please enter a valid 16-digit card number.');
+        return;
+      }
+      if (!cardExpiry.match(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/)) {
+        setFormError('Please enter a valid card expiry date (MM/YY).');
+        return;
+      }
+      if (cardCvv.length !== 3 || isNaN(cardCvv)) {
+        setFormError('Please enter a valid 3-digit CVV code.');
+        return;
+      }
+    }
+
+    const success = await handleDeposit(depositAmount, paymentMode);
+    if (success) {
+      setFormSuccess(`Successfully deposited $${depositAmount.toLocaleString()} virtually!`);
+      // Reset sensitive fields
+      setUpiId('');
+      setCardNumber('');
+      setCardExpiry('');
+      setCardCvv('');
+    }
+  };
+
+  const handleQuickAmount = (amount) => {
+    setDepositAmount(amount);
+    setFormError('');
+  };
+
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+  };
+
   return (
-    <div className="profile-page animate-fade" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+    <div className="profile-page animate-fade" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'flex-start' }}>
       
-      {/* Account Info Card */}
-      <div className="card">
-        <h2>👤 Account Profile Info</h2>
-        <div style={{ padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Username</span>
-            <strong style={{ fontSize: '18px' }}>{user.username}</strong>
+      {/* Left Column: Account Profile & Deposit Card */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        
+        {/* Account Info Card */}
+        <div className="card">
+          <h2>👤 Account Profile Info</h2>
+          <div style={{ padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Username</span>
+              <strong style={{ fontSize: '18px' }}>{user.username}</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Email Address</span>
+              <strong style={{ fontSize: '18px' }}>{user.email}</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Account Type</span>
+              <strong style={{ fontSize: '18px', textTransform: 'uppercase', color: user.userType === 'admin' ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                {user.userType}
+              </strong>
+            </div>
+            <div>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Cash Balance</span>
+              <strong style={{ fontSize: '18px', color: 'var(--accent-success)' }}>
+                {formatCurrency(user.virtualCashBalance)}
+              </strong>
+            </div>
           </div>
-          <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Email Address</span>
-            <strong style={{ fontSize: '18px' }}>{user.email}</strong>
-          </div>
-          <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Account Type</span>
-            <strong style={{ fontSize: '18px', textTransform: 'uppercase', color: user.userType === 'admin' ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
-              {user.userType}
-            </strong>
-          </div>
-          <div>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Cash Balance</span>
-            <strong style={{ fontSize: '18px', color: 'var(--accent-success)' }}>
-              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(user.virtualCashBalance)}
-            </strong>
-          </div>
+
+          {/* Email Verification Banner */}
+          {!user.isVerified && (
+            <div className="status-message error" style={{ color: '#ffb300', background: 'rgba(255, 179, 0, 0.1)', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start', padding: '16px', marginTop: '10px', border: '1px solid rgba(255, 179, 0, 0.2)' }}>
+              <div>
+                <strong>⚠️ Verification Required:</strong> Please verify your email to unlock trading features.
+              </div>
+              <button onClick={handleResendVerification} className="logout-btn" style={{ padding: '6px 12px', fontSize: '12px', borderColor: 'rgba(255, 179, 0, 0.4)' }} disabled={loading}>
+                Resend Verification Link
+              </button>
+              {demoVerificationLink && (
+                <div style={{ width: '100%' }}>
+                  <span style={{ fontSize: '13px' }}>
+                    <strong>[DEMO] Link:</strong>{' '}
+                    <a href={demoVerificationLink} style={{ color: 'var(--text-primary)', textDecoration: 'underline' }}>
+                      Click here to verify
+                    </a>
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Email Verification Banner */}
-        {!user.isVerified && (
-          <div className="status-message error" style={{ color: '#ffb300', background: 'rgba(255, 179, 0, 0.1)', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start', padding: '16px', marginTop: '10px', border: '1px solid rgba(255, 179, 0, 0.2)' }}>
-            <div>
-              <strong>⚠️ Verification Required:</strong> Please verify your email to unlock trading features.
+        {/* NEW: Virtual Cash Deposit Card */}
+        <div className="card">
+          <h2>💳 Add Virtual Funds</h2>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px', marginBottom: '16px' }}>
+            Increase your simulator balance by depositing play funds through UPI, Net Banking, or Card.
+          </p>
+
+          {formError && <div className="status-message error" style={{ marginBottom: '16px' }}>{formError}</div>}
+          {formSuccess && <div className="status-message success" style={{ marginBottom: '16px' }}>{formSuccess}</div>}
+
+          <form onSubmit={handleVirtualDepositSubmit}>
+            {/* Payment Method Selector */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Payment Mode</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setPaymentMode('UPI'); setFormError(''); setFormSuccess(''); }}
+                  style={{
+                    flex: 1,
+                    padding: '10px 4px',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    background: paymentMode === 'UPI' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                    color: '#fff',
+                    border: '1px solid var(--border-color)'
+                  }}
+                >
+                  📱 UPI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPaymentMode('NET_BANKING'); setFormError(''); setFormSuccess(''); }}
+                  style={{
+                    flex: 1,
+                    padding: '10px 4px',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    background: paymentMode === 'NET_BANKING' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                    color: '#fff',
+                    border: '1px solid var(--border-color)'
+                  }}
+                >
+                  🏦 Net Banking
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPaymentMode('CARD'); setFormError(''); setFormSuccess(''); }}
+                  style={{
+                    flex: 1,
+                    padding: '10px 4px',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    background: paymentMode === 'CARD' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                    color: '#fff',
+                    border: '1px solid var(--border-color)'
+                  }}
+                >
+                  💳 Card
+                </button>
+              </div>
             </div>
-            <button onClick={handleResendVerification} className="logout-btn" style={{ padding: '6px 12px', fontSize: '12px', borderColor: 'rgba(255, 179, 0, 0.4)' }} disabled={loading}>
-              Resend Verification Link
-            </button>
-            {demoVerificationLink && (
-              <div style={{ width: '100%' }}>
-                <span style={{ fontSize: '13px' }}>
-                  <strong>[DEMO] Link:</strong>{' '}
-                  <a href={demoVerificationLink} style={{ color: 'var(--text-primary)', textDecoration: 'underline' }}>
-                    Click here to verify
-                  </a>
-                </span>
+
+            {/* Quick Amount Selections */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Quick Select Amount</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                {[1000, 5000, 10000, 50000].map(amt => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => handleQuickAmount(amt)}
+                    style={{
+                      padding: '8px 2px',
+                      background: depositAmount === amt ? 'rgba(99, 102, 241, 0.2)' : 'var(--bg-tertiary)',
+                      border: depositAmount === amt ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-sm)',
+                      color: '#fff',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    +${amt.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Manual Deposit Amount */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label htmlFor="dep-amount" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Deposit Amount ($)</label>
+              <input
+                id="dep-amount"
+                type="number"
+                min="1"
+                className="form-input"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(Math.max(1, parseInt(e.target.value) || 0))}
+                required
+              />
+            </div>
+
+            {/* Dynamic Credentials Inputs */}
+            {paymentMode === 'UPI' && (
+              <div className="form-group animate-fade" style={{ marginBottom: '20px' }}>
+                <label htmlFor="upi-id" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>UPI ID</label>
+                <input
+                  id="upi-id"
+                  type="text"
+                  className="form-input"
+                  placeholder="username@bank"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  required
+                />
               </div>
             )}
-          </div>
-        )}
+
+            {paymentMode === 'NET_BANKING' && (
+              <div className="form-group animate-fade" style={{ marginBottom: '20px' }}>
+                <label htmlFor="bank-select" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Select Bank</label>
+                <select
+                  id="bank-select"
+                  className="form-input"
+                  value={selectedBank}
+                  onChange={(e) => setSelectedBank(e.target.value)}
+                  required
+                >
+                  <option value="State Bank of India">State Bank of India</option>
+                  <option value="HDFC Bank">HDFC Bank</option>
+                  <option value="ICICI Bank">ICICI Bank</option>
+                  <option value="Axis Bank">Axis Bank</option>
+                  <option value="Federal Bank">Federal Bank</option>
+                </select>
+              </div>
+            )}
+
+            {paymentMode === 'CARD' && (
+              <div className="animate-fade" style={{ marginBottom: '20px' }}>
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label htmlFor="card-num" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Card Number</label>
+                  <input
+                    id="card-num"
+                    type="text"
+                    maxLength="16"
+                    className="form-input"
+                    placeholder="1234567890123456"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    required
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="form-group">
+                    <label htmlFor="card-exp" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Expiry Date</label>
+                    <input
+                      id="card-exp"
+                      type="text"
+                      maxLength="5"
+                      placeholder="MM/YY"
+                      className="form-input"
+                      value={cardExpiry}
+                      onChange={(e) => setCardExpiry(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="card-cvv" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>CVV</label>
+                    <input
+                      id="card-cvv"
+                      type="password"
+                      maxLength="3"
+                      placeholder="***"
+                      className="form-input"
+                      value={cardCvv}
+                      onChange={(e) => setCardCvv(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="portfolio-btn"
+              style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}
+              disabled={loading || !user.isVerified}
+            >
+              {loading ? 'Processing Virtual Deposit...' : `Deposit ${formatCurrency(depositAmount)} Virtually`}
+            </button>
+            {!user.isVerified && (
+              <p style={{ color: 'var(--accent-danger)', fontSize: '11px', textAlign: 'center', marginTop: '8px' }}>
+                Please verify your account email to unlock deposit capabilities.
+              </p>
+            )}
+          </form>
+        </div>
+
       </div>
 
       {/* Security settings card */}
