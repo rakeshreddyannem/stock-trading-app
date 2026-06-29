@@ -7,6 +7,7 @@ import Portfolio from './pages/Portfolio';
 import Profile from './pages/Profile';
 import History from './pages/History';
 import StockChart from './pages/StockChart';
+import Funds from './pages/Funds';
 import Admin from './pages/Admin';
 import Users from './pages/Users';
 import AllOrders from './pages/AllOrders';
@@ -110,6 +111,7 @@ function AppContent() {
           {/* Page Routing */}
           {currentPage === 'home' && <Home />}
           {currentPage === 'portfolio' && <Portfolio />}
+          {currentPage === 'funds' && <Funds />}
           {currentPage === 'strategy' && <StockChart />}
           {currentPage === 'history' && <History />}
           {currentPage === 'profile' && <Profile />}

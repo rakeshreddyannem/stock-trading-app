@@ -45,6 +45,12 @@ export default function Navbar() {
               My Portfolio
             </button>
             <button 
+              className={`nav-tab-btn ${currentPage === 'funds' ? 'active' : ''}`}
+              onClick={() => handleTabChange('funds')}
+            >
+              Funds
+            </button>
+            <button 
               className={`nav-tab-btn ${currentPage === 'strategy' ? 'active' : ''}`}
               onClick={() => handleTabChange('strategy')}
             >
