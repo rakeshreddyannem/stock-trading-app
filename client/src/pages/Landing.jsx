@@ -38,10 +38,10 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
-          <div className="hero-badge">VIRTUAL STOCK TRADING SIMULATOR</div>
+          <div className="hero-badge">STOCK TRADING SIMULATOR</div>
           <h1>Simulate your path to financial wealth</h1>
           <p>
-            Learn trading, build diverse portfolios, and test backtesting strategies in a real-time risk-free environment. Get a <strong>$10,000 virtual cash balance</strong> immediately upon signup.
+            Learn trading, build diverse portfolios, and test backtesting strategies in a real-time risk-free environment. Get a <strong>$10,000 cash balance</strong> immediately upon signup.
           </p>
           <div className="hero-buttons">
             <button className="hero-btn-primary" onClick={handleStartFree}>
@@ -61,7 +61,7 @@ export default function Landing() {
       {/* Features Grid */}
       <section id="features" className="features-section">
         <div className="section-header">
-          <h2>A full suite for virtual investors</h2>
+          <h2>A full suite for modern investors</h2>
           <p>Everything you need to master stock trading without financial risk</p>
         </div>
         
@@ -71,7 +71,7 @@ export default function Landing() {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
             </div>
             <h3>Live Asset Brokerage</h3>
-            <p>Buy and sell real stocks including AAPL, MSFT, GOOGL, AMZN, and TSLA under virtual cash accounts.</p>
+            <p>Buy and sell real stocks including AAPL, MSFT, GOOGL, AMZN, and TSLA under cash accounts.</p>
           </div>
 
           <div className="feature-card">
@@ -94,7 +94,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="landing-footer">
-        <p>© 2026 SB Stocks Virtual Trading Simulation. For educational purposes only.</p>
+        <p>© 2026 SB Stocks Trading Simulation. For educational purposes only.</p>
       </footer>
     </div>
   );

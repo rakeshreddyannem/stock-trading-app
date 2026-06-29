@@ -100,7 +100,7 @@ function AppContent() {
             
             <div className="stat-card">
               <div>
-                <div className="label">Virtual Cash</div>
+                <div className="label">Cash Balance</div>
                 <div className="value" style={{ fontSize: '28px' }}>{formatCurrency(user.virtualCashBalance)}</div>
               </div>
               <div className="subtitle">Available to place trades</div>

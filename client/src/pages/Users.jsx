@@ -30,7 +30,7 @@ export default function Users() {
                 <th>Username</th>
                 <th>Email</th>
                 <th>Role</th>
-                <th>Virtual Cash Balance</th>
+                <th>Cash Balance</th>
                 <th>Verified Status</th>
                 <th>MFA (2FA) Status</th>
               </tr>

@@ -14,33 +14,44 @@ export default function Profile() {
     handleSetupMfa,
     handleVerifyEnableMfa,
     handleDisableMfa,
-    handleDeposit
+    handleDeposit,
+    handleWithdraw
   } = useContext(GeneralContext);
 
+  const [fundAction, setFundAction] = useState('DEPOSIT'); // 'DEPOSIT' or 'WITHDRAW'
   const [paymentMode, setPaymentMode] = useState('UPI');
-  const [depositAmount, setDepositAmount] = useState(5000);
+  const [fundAmount, setFundAmount] = useState(5000);
+  
+  // Simulated credentials states
   const [upiId, setUpiId] = useState('');
   const [selectedBank, setSelectedBank] = useState('State Bank of India');
+  const [bankAccountNum, setBankAccountNum] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
+  
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
 
-  const handleVirtualDepositSubmit = async (e) => {
+  const handleFundActionSubmit = async (e) => {
     e.preventDefault();
     setFormSuccess('');
     setFormError('');
 
-    if (depositAmount <= 0) {
-      setFormError('Please enter a valid deposit amount greater than zero.');
+    if (fundAmount <= 0) {
+      setFormError('Please enter a valid amount greater than zero.');
       return;
     }
 
-    // Basic validations for simulated credentials
+    // Basic validators for credentials
     if (paymentMode === 'UPI') {
       if (!upiId.trim() || !upiId.includes('@')) {
         setFormError('Please enter a valid UPI ID (e.g. user@upi).');
+        return;
+      }
+    } else if (paymentMode === 'NET_BANKING') {
+      if (fundAction === 'WITHDRAW' && (!bankAccountNum.trim() || isNaN(bankAccountNum))) {
+        setFormError('Please enter a valid bank account number.');
         return;
       }
     } else if (paymentMode === 'CARD') {
@@ -59,19 +70,36 @@ export default function Profile() {
       }
     }
 
-    const success = await handleDeposit(depositAmount, paymentMode);
-    if (success) {
-      setFormSuccess(`Successfully deposited $${depositAmount.toLocaleString()} virtually!`);
-      // Reset sensitive fields
-      setUpiId('');
-      setCardNumber('');
-      setCardExpiry('');
-      setCardCvv('');
+    if (fundAction === 'DEPOSIT') {
+      const success = await handleDeposit(fundAmount, paymentMode);
+      if (success) {
+        setFormSuccess(`Successfully deposited $${fundAmount.toLocaleString()}!`);
+        resetFields();
+      }
+    } else {
+      // Check local user balance before executing withdraw API
+      if (user.virtualCashBalance < fundAmount) {
+        setFormError('Insufficient balance to make this withdrawal.');
+        return;
+      }
+      const success = await handleWithdraw(fundAmount, paymentMode);
+      if (success) {
+        setFormSuccess(`Successfully withdrew $${fundAmount.toLocaleString()}!`);
+        resetFields();
+      }
     }
   };
 
+  const resetFields = () => {
+    setUpiId('');
+    setBankAccountNum('');
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCvv('');
+  };
+
   const handleQuickAmount = (amount) => {
-    setDepositAmount(amount);
+    setFundAmount(amount);
     setFormError('');
   };
 
@@ -82,7 +110,7 @@ export default function Profile() {
   return (
     <div className="profile-page animate-fade" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'flex-start' }}>
       
-      {/* Left Column: Account Profile & Deposit Card */}
+      {/* Left Column: Account Profile & Funds Management Card */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         {/* Account Info Card */}
@@ -134,17 +162,53 @@ export default function Profile() {
           )}
         </div>
 
-        {/* NEW: Virtual Cash Deposit Card */}
+        {/* Funds Management Card */}
         <div className="card">
-          <h2>💳 Add Virtual Funds</h2>
+          <h2>💳 Funds Management</h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px', marginBottom: '16px' }}>
-            Increase your simulator balance by depositing play funds through UPI, Net Banking, or Card.
+            Increase or decrease your simulator balance by adding or withdrawing funds.
           </p>
+
+          {/* Deposit/Withdraw Tabs */}
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '20px' }}>
+            <button
+              type="button"
+              onClick={() => { setFundAction('DEPOSIT'); setFormError(''); setFormSuccess(''); }}
+              style={{
+                flex: 1,
+                padding: '12px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: fundAction === 'DEPOSIT' ? '2px solid var(--accent-primary)' : 'none',
+                color: fundAction === 'DEPOSIT' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              📥 Deposit Funds
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFundAction('WITHDRAW'); setFormError(''); setFormSuccess(''); }}
+              style={{
+                flex: 1,
+                padding: '12px',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: fundAction === 'WITHDRAW' ? '2px solid var(--accent-primary)' : 'none',
+                color: fundAction === 'WITHDRAW' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              📤 Withdraw Funds
+            </button>
+          </div>
 
           {formError && <div className="status-message error" style={{ marginBottom: '16px' }}>{formError}</div>}
           {formSuccess && <div className="status-message success" style={{ marginBottom: '16px' }}>{formSuccess}</div>}
 
-          <form onSubmit={handleVirtualDepositSubmit}>
+          <form onSubmit={handleFundActionSubmit}>
             {/* Payment Method Selector */}
             <div className="form-group" style={{ marginBottom: '16px' }}>
               <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Payment Mode</label>
@@ -214,8 +278,8 @@ export default function Profile() {
                     onClick={() => handleQuickAmount(amt)}
                     style={{
                       padding: '8px 2px',
-                      background: depositAmount === amt ? 'rgba(99, 102, 241, 0.2)' : 'var(--bg-tertiary)',
-                      border: depositAmount === amt ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      background: fundAmount === amt ? 'rgba(99, 102, 241, 0.2)' : 'var(--bg-tertiary)',
+                      border: fundAmount === amt ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
                       borderRadius: 'var(--radius-sm)',
                       color: '#fff',
                       fontSize: '12px',
@@ -223,22 +287,22 @@ export default function Profile() {
                       cursor: 'pointer'
                     }}
                   >
-                    +${amt.toLocaleString()}
+                    ${amt.toLocaleString()}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Manual Deposit Amount */}
+            {/* Manual Amount */}
             <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label htmlFor="dep-amount" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Deposit Amount ($)</label>
+              <label htmlFor="fund-amount" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Amount ($)</label>
               <input
-                id="dep-amount"
+                id="fund-amount"
                 type="number"
                 min="1"
                 className="form-input"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(Math.max(1, parseInt(e.target.value) || 0))}
+                value={fundAmount}
+                onChange={(e) => setFundAmount(Math.max(1, parseInt(e.target.value) || 0))}
                 required
               />
             </div>
@@ -260,21 +324,37 @@ export default function Profile() {
             )}
 
             {paymentMode === 'NET_BANKING' && (
-              <div className="form-group animate-fade" style={{ marginBottom: '20px' }}>
-                <label htmlFor="bank-select" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Select Bank</label>
-                <select
-                  id="bank-select"
-                  className="form-input"
-                  value={selectedBank}
-                  onChange={(e) => setSelectedBank(e.target.value)}
-                  required
-                >
-                  <option value="State Bank of India">State Bank of India</option>
-                  <option value="HDFC Bank">HDFC Bank</option>
-                  <option value="ICICI Bank">ICICI Bank</option>
-                  <option value="Axis Bank">Axis Bank</option>
-                  <option value="Federal Bank">Federal Bank</option>
-                </select>
+              <div className="animate-fade" style={{ marginBottom: '20px' }}>
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label htmlFor="bank-select" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Select Bank</label>
+                  <select
+                    id="bank-select"
+                    className="form-input"
+                    value={selectedBank}
+                    onChange={(e) => setSelectedBank(e.target.value)}
+                    required
+                  >
+                    <option value="State Bank of India">State Bank of India</option>
+                    <option value="HDFC Bank">HDFC Bank</option>
+                    <option value="ICICI Bank">ICICI Bank</option>
+                    <option value="Axis Bank">Axis Bank</option>
+                    <option value="Federal Bank">Federal Bank</option>
+                  </select>
+                </div>
+                {fundAction === 'WITHDRAW' && (
+                  <div className="form-group">
+                    <label htmlFor="bank-acct" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Bank Account Number</label>
+                    <input
+                      id="bank-acct"
+                      type="text"
+                      placeholder="1234567890"
+                      className="form-input"
+                      value={bankAccountNum}
+                      onChange={(e) => setBankAccountNum(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
               </div>
             )}
 
@@ -330,11 +410,14 @@ export default function Profile() {
               style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}
               disabled={loading || !user.isVerified}
             >
-              {loading ? 'Processing Virtual Deposit...' : `Deposit ${formatCurrency(depositAmount)} Virtually`}
+              {loading 
+                ? `${fundAction === 'DEPOSIT' ? 'Processing Deposit...' : 'Processing Withdrawal...'}` 
+                : `${fundAction === 'DEPOSIT' ? `Deposit ${formatCurrency(fundAmount)}` : `Withdraw ${formatCurrency(fundAmount)}`}`
+              }
             </button>
             {!user.isVerified && (
               <p style={{ color: 'var(--accent-danger)', fontSize: '11px', textAlign: 'center', marginTop: '8px' }}>
-                Please verify your account email to unlock deposit capabilities.
+                Please verify your account email to unlock funds management capabilities.
               </p>
             )}
           </form>
@@ -350,7 +433,7 @@ export default function Profile() {
 
         <div style={{ padding: '10px 0' }}>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            Protect your virtual trading account from unauthorized access by adding an extra layer of security.
+            Protect your trading account from unauthorized access by adding an extra layer of security.
           </p>
 
           {user.isMfaEnabled ? (

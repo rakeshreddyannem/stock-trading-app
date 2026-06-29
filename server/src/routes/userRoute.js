@@ -14,7 +14,8 @@ const {
     disableMfa,
     loginVerifyMfa,
     getAllUsers,
-    depositFunds
+    depositFunds,
+    withdrawFunds
 } = require('../controllers/userController');
 const { protect, verified, admin } = require('../middlewares/authMiddleware');
 
@@ -24,6 +25,7 @@ router.post('/portfolios', protect, verified, createPortfolio);
 router.get('/portfolios/:userId', protect, getPortfolios);
 router.get('/users', protect, admin, getAllUsers);
 router.post('/deposit', protect, verified, depositFunds);
+router.post('/withdraw', protect, verified, withdrawFunds);
 
 // Verification routes
 router.get('/verify-email/:token', verifyEmail);

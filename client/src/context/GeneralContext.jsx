@@ -450,6 +450,28 @@ export function GeneralContextProvider({ children }) {
     }
   }
 
+  const handleWithdraw = async (amount, paymentMode) => {
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    try {
+      const res = await axiosInstance.post('/api/auth/withdraw', { amount, paymentMode });
+      setUser(current => {
+        const updated = { ...current, virtualCashBalance: res.data.user.virtualCashBalance };
+        localStorage.setItem('user_session', JSON.stringify(updated));
+        return updated;
+      });
+      setSuccess(res.data.message);
+      await fetchUserData();
+      return true;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Withdrawal failed');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('user_session');
@@ -559,6 +581,7 @@ export function GeneralContextProvider({ children }) {
       handleCreatePortfolio,
       handleTradeSubmit,
       handleDeposit,
+      handleWithdraw,
       handleLogout,
       handleVerifyEmailToken
     }}>

@@ -41,7 +41,7 @@ export default function Login() {
         ) : (
           <>
             <h1>Sign In</h1>
-            <p>Resume simulating virtual trades</p>
+            <p>Resume simulating trades</p>
           </>
         )}
       </div>

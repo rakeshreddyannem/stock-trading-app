@@ -22,7 +22,7 @@ export default function Register() {
           <img src="/logo.png" alt="SB Stocks Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
         <h1>Register Account</h1>
-        <p>Access $10,000 virtual cash instantly</p>
+        <p>Access $10,000 cash balance instantly</p>
       </div>
 
       {error && <div className="status-message error">{error}</div>}

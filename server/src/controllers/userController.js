@@ -475,7 +475,7 @@ const depositFunds = async (req, res) => {
             amount: parseFloat(amount)
         });
 
-        logger.info(`User ${user.email} virtually deposited $${amount} via ${paymentMode}`);
+        logger.info(`User ${user.email} deposited $${amount} via ${paymentMode}`);
 
         const updatedUser = {
             _id: user._id,
@@ -488,12 +488,67 @@ const depositFunds = async (req, res) => {
         };
 
         res.json({
-            message: `Successfully deposited $${amount} virtually!`,
+            message: `Successfully deposited $${amount}!`,
             user: updatedUser
         });
     } catch (error) {
-        logger.error(`Virtual deposit error: ${error.message}`);
-        res.status(500).json({ message: 'Failed to process virtual deposit' });
+        logger.error(`Deposit error: ${error.message}`);
+        res.status(500).json({ message: 'Failed to process deposit' });
+    }
+};
+
+const withdrawFunds = async (req, res) => {
+    try {
+        const { amount, paymentMode } = req.body;
+        const userId = req.user.id;
+
+        if (!amount || isNaN(amount) || amount <= 0) {
+            return res.status(400).json({ message: 'Please provide a valid withdrawal amount greater than zero' });
+        }
+
+        const allowedModes = ['UPI', 'NET_BANKING', 'CARD'];
+        if (!paymentMode || !allowedModes.includes(paymentMode)) {
+            return res.status(400).json({ message: 'Invalid payment method selected' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.virtualCashBalance < parseFloat(amount)) {
+            return res.status(400).json({ message: 'Insufficient balance to make this withdrawal' });
+        }
+
+        user.virtualCashBalance -= parseFloat(amount);
+        await user.save();
+
+        await Transaction.create({
+            userId,
+            transactionType: 'WITHDRAWAL',
+            paymentMode,
+            amount: parseFloat(amount)
+        });
+
+        logger.info(`User ${user.email} withdrew $${amount} via ${paymentMode}`);
+
+        const updatedUser = {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            userType: user.userType,
+            virtualCashBalance: user.virtualCashBalance,
+            isVerified: user.isVerified,
+            isMfaEnabled: user.isMfaEnabled
+        };
+
+        res.json({
+            message: `Successfully withdrew $${amount}!`,
+            user: updatedUser
+        });
+    } catch (error) {
+        logger.error(`Withdrawal error: ${error.message}`);
+        res.status(500).json({ message: 'Failed to process withdrawal' });
     }
 };
 
@@ -511,5 +566,6 @@ module.exports = {
     disableMfa,
     loginVerifyMfa,
     getAllUsers,
-    depositFunds
+    depositFunds,
+    withdrawFunds
 };
