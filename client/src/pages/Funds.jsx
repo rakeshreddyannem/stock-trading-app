@@ -9,88 +9,116 @@ export default function Funds() {
     handleWithdraw
   } = useContext(GeneralContext);
 
-  const [fundAction, setFundAction] = useState('DEPOSIT'); // 'DEPOSIT' or 'WITHDRAW'
-  const [paymentMode, setPaymentMode] = useState('UPI');
-  const [fundAmount, setFundAmount] = useState(5000);
-  
-  // Simulated credentials states
-  const [upiId, setUpiId] = useState('');
-  const [selectedBank, setSelectedBank] = useState('State Bank of India');
-  const [bankAccountNum, setBankAccountNum] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  
-  const [formSuccess, setFormSuccess] = useState('');
-  const [formError, setFormError] = useState('');
+  // Deposit Form States
+  const [depositMode, setDepositMode] = useState('UPI');
+  const [depositAmount, setDepositAmount] = useState(5000);
+  const [depSelectedBank, setDepSelectedBank] = useState('State Bank of India');
+  const [depCardNumber, setDepCardNumber] = useState('');
+  const [depCardExpiry, setDepCardExpiry] = useState('');
+  const [depCardCvv, setDepCardCvv] = useState('');
+  const [depSuccess, setDepSuccess] = useState('');
+  const [depError, setDepError] = useState('');
 
-  const handleFundActionSubmit = async (e) => {
+  // Withdrawal Form States
+  const [withdrawMode, setWithdrawMode] = useState('UPI');
+  const [withdrawAmount, setWithdrawAmount] = useState(5000);
+  const [withSelectedBank, setWithSelectedBank] = useState('State Bank of India');
+  const [withBankAccountNum, setWithBankAccountNum] = useState('');
+  const [withCardNumber, setWithCardNumber] = useState('');
+  const [withCardExpiry, setWithCardExpiry] = useState('');
+  const [withCardCvv, setWithCardCvv] = useState('');
+  const [withSuccess, setWithSuccess] = useState('');
+  const [withError, setWithError] = useState('');
+
+  // Handle Deposit Submission
+  const handleDepositSubmit = async (e) => {
     e.preventDefault();
-    setFormSuccess('');
-    setFormError('');
+    setDepSuccess('');
+    setDepError('');
 
-    if (fundAmount <= 0) {
-      setFormError('Please enter a valid amount greater than zero.');
+    if (depositAmount <= 0) {
+      setDepError('Please enter a valid deposit amount greater than zero.');
       return;
     }
 
-    // Basic validators for credentials
-    if (paymentMode === 'UPI') {
-      if (!upiId.trim() || !upiId.includes('@')) {
-        setFormError('Please enter a valid UPI ID (e.g. user@upi).');
-        return;
-      }
-    } else if (paymentMode === 'NET_BANKING') {
-      if (fundAction === 'WITHDRAW' && (!bankAccountNum.trim() || isNaN(bankAccountNum))) {
-        setFormError('Please enter a valid bank account number.');
-        return;
-      }
-    } else if (paymentMode === 'CARD') {
-      const cleanCard = cardNumber.replace(/\s/g, '');
+    if (depositMode === 'CARD') {
+      const cleanCard = depCardNumber.replace(/\s/g, '');
       if (cleanCard.length !== 16 || isNaN(cleanCard)) {
-        setFormError('Please enter a valid 16-digit card number.');
+        setDepError('Please enter a valid 16-digit card number.');
         return;
       }
-      if (!cardExpiry.match(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/)) {
-        setFormError('Please enter a valid card expiry date (MM/YY).');
+      if (!depCardExpiry.match(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/)) {
+        setDepError('Please enter a valid card expiry date (MM/YY).');
         return;
       }
-      if (cardCvv.length !== 3 || isNaN(cardCvv)) {
-        setFormError('Please enter a valid 3-digit CVV code.');
+      if (depCardCvv.length !== 3 || isNaN(depCardCvv)) {
+        setDepError('Please enter a valid 3-digit CVV code.');
         return;
       }
     }
 
-    if (fundAction === 'DEPOSIT') {
-      const success = await handleDeposit(fundAmount, paymentMode);
-      if (success) {
-        setFormSuccess(`Successfully deposited $${fundAmount.toLocaleString()}!`);
-        resetFields();
-      }
-    } else {
-      if (user.virtualCashBalance < fundAmount) {
-        setFormError('Insufficient balance to make this withdrawal.');
-        return;
-      }
-      const success = await handleWithdraw(fundAmount, paymentMode);
-      if (success) {
-        setFormSuccess(`Successfully withdrew $${fundAmount.toLocaleString()}!`);
-        resetFields();
-      }
+    const success = await handleDeposit(depositAmount, depositMode);
+    if (success) {
+      setDepSuccess(`Successfully deposited $${depositAmount.toLocaleString()}!`);
+      resetDepositFields();
     }
   };
 
-  const resetFields = () => {
-    setUpiId('');
-    setBankAccountNum('');
-    setCardNumber('');
-    setCardExpiry('');
-    setCardCvv('');
+  // Handle Withdrawal Submission
+  const handleWithdrawSubmit = async (e) => {
+    e.preventDefault();
+    setWithSuccess('');
+    setWithError('');
+
+    if (withdrawAmount <= 0) {
+      setWithError('Please enter a valid withdrawal amount greater than zero.');
+      return;
+    }
+
+    if (withdrawMode === 'NET_BANKING') {
+      if (!withBankAccountNum.trim() || isNaN(withBankAccountNum)) {
+        setWithError('Please enter a valid bank account number.');
+        return;
+      }
+    } else if (withdrawMode === 'CARD') {
+      const cleanCard = withCardNumber.replace(/\s/g, '');
+      if (cleanCard.length !== 16 || isNaN(cleanCard)) {
+        setWithError('Please enter a valid 16-digit card number.');
+        return;
+      }
+      if (!withCardExpiry.match(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/)) {
+        setWithError('Please enter a valid card expiry date (MM/YY).');
+        return;
+      }
+      if (withCardCvv.length !== 3 || isNaN(withCardCvv)) {
+        setWithError('Please enter a valid 3-digit CVV code.');
+        return;
+      }
+    }
+
+    if (user.virtualCashBalance < withdrawAmount) {
+      setWithError('Insufficient balance to make this withdrawal.');
+      return;
+    }
+
+    const success = await handleWithdraw(withdrawAmount, withdrawMode);
+    if (success) {
+      setWithSuccess(`Successfully withdrew $${withdrawAmount.toLocaleString()}!`);
+      resetWithdrawFields();
+    }
   };
 
-  const handleQuickAmount = (amount) => {
-    setFundAmount(amount);
-    setFormError('');
+  const resetDepositFields = () => {
+    setDepCardNumber('');
+    setDepCardExpiry('');
+    setDepCardCvv('');
+  };
+
+  const resetWithdrawFields = () => {
+    setWithBankAccountNum('');
+    setWithCardNumber('');
+    setWithCardExpiry('');
+    setWithCardCvv('');
   };
 
   const formatCurrency = (val) => {
@@ -98,186 +126,124 @@ export default function Funds() {
   };
 
   return (
-    <div className="funds-page animate-fade" style={{ maxWidth: '600px', margin: '0 auto' }}>
+    <div className="funds-page animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
-      {/* Funds Management Card */}
-      <div className="card" style={{ padding: '28px' }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>💳 Funds Management</h2>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px', marginBottom: '24px' }}>
-          Increase or decrease your simulator balance by adding or withdrawing funds.
-        </p>
-
-        {/* Current Balance Display */}
-        <div style={{ background: 'var(--bg-tertiary)', padding: '16px 20px', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', border: '1px solid var(--border-color)' }}>
-          <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>Current Cash Balance</span>
-          <strong style={{ fontSize: '22px', color: 'var(--accent-success)' }}>{formatCurrency(user?.virtualCashBalance || 0)}</strong>
+      {/* Current Balance Card */}
+      <div className="card" style={{ padding: '20px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '20px' }}>💰 Funds Dashboard</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Manage your deposits and withdrawals in one place.
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Current Cash Balance</span>
+            <strong style={{ fontSize: '24px', color: 'var(--accent-success)' }}>{formatCurrency(user?.virtualCashBalance || 0)}</strong>
+          </div>
         </div>
+      </div>
 
-        {/* Deposit/Withdraw Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '24px' }}>
-          <button
-            type="button"
-            onClick={() => { setFundAction('DEPOSIT'); setFormError(''); setFormSuccess(''); }}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: fundAction === 'DEPOSIT' ? '2px solid var(--accent-primary)' : 'none',
-              color: fundAction === 'DEPOSIT' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
-          >
-            📥 Deposit Funds
-          </button>
-          <button
-            type="button"
-            onClick={() => { setFundAction('WITHDRAW'); setFormError(''); setFormSuccess(''); }}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: fundAction === 'WITHDRAW' ? '2px solid var(--accent-primary)' : 'none',
-              color: fundAction === 'WITHDRAW' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
-          >
-            📤 Withdraw Funds
-          </button>
-        </div>
+      {/* Two-Column Grid for forms */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'flex-start' }}>
+        
+        {/* Column 1: Add Funds Form */}
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 8px 0', fontSize: '18px' }}>📥 Add Funds</h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px 0' }}>
+            Deposit money to your cash balance instantly.
+          </p>
 
-        {formError && <div className="status-message error" style={{ marginBottom: '20px' }}>{formError}</div>}
-        {formSuccess && <div className="status-message success" style={{ marginBottom: '20px' }}>{formSuccess}</div>}
+          {depError && <div className="status-message error" style={{ marginBottom: '16px' }}>{depError}</div>}
+          {depSuccess && <div className="status-message success" style={{ marginBottom: '16px' }}>{depSuccess}</div>}
 
-        <form onSubmit={handleFundActionSubmit}>
-          {/* Payment Method Selector */}
-          <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Payment Mode</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => { setPaymentMode('UPI'); setFormError(''); setFormSuccess(''); }}
-                style={{
-                  flex: 1,
-                  padding: '12px 4px',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  background: paymentMode === 'UPI' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                  color: '#fff',
-                  border: '1px solid var(--border-color)'
-                }}
-              >
-                📱 UPI
-              </button>
-              <button
-                type="button"
-                onClick={() => { setPaymentMode('NET_BANKING'); setFormError(''); setFormSuccess(''); }}
-                style={{
-                  flex: 1,
-                  padding: '12px 4px',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  background: paymentMode === 'NET_BANKING' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                  color: '#fff',
-                  border: '1px solid var(--border-color)'
-                }}
-              >
-                🏦 Net Banking
-              </button>
-              <button
-                type="button"
-                onClick={() => { setPaymentMode('CARD'); setFormError(''); setFormSuccess(''); }}
-                style={{
-                  flex: 1,
-                  padding: '12px 4px',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  background: paymentMode === 'CARD' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                  color: '#fff',
-                  border: '1px solid var(--border-color)'
-                }}
-              >
-                💳 Card
-              </button>
+          <form onSubmit={handleDepositSubmit}>
+            {/* Payment Method Selector */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Payment Mode</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {['UPI', 'NET_BANKING', 'CARD'].map(mode => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => { setDepositMode(mode); setDepError(''); setDepSuccess(''); }}
+                    style={{
+                      flex: 1,
+                      padding: '10px 4px',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      background: depositMode === mode ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                      color: '#fff',
+                      border: '1px solid var(--border-color)'
+                    }}
+                  >
+                    {mode === 'UPI' && '📱 UPI'}
+                    {mode === 'NET_BANKING' && '🏦 Net Bank'}
+                    {mode === 'CARD' && '💳 Card'}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Quick Amount Selections */}
-          <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Quick Select Amount</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-              {[1000, 5000, 10000, 50000].map(amt => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => handleQuickAmount(amt)}
-                  style={{
-                    padding: '10px 2px',
-                    background: fundAmount === amt ? 'rgba(99, 102, 241, 0.2)' : 'var(--bg-tertiary)',
-                    border: fundAmount === amt ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-sm)',
-                    color: '#fff',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  ${amt.toLocaleString()}
-                </button>
-              ))}
+            {/* Quick Amount Selections */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Quick Select Amount</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                {[1000, 5000, 10000, 50000].map(amt => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => { setDepositAmount(amt); setDepError(''); }}
+                    style={{
+                      padding: '8px 2px',
+                      background: depositAmount === amt ? 'rgba(99, 102, 241, 0.2)' : 'var(--bg-tertiary)',
+                      border: depositAmount === amt ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-sm)',
+                      color: '#fff',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ${amt.toLocaleString()}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Manual Amount */}
-          <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label htmlFor="fund-amount" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Amount ($)</label>
-            <input
-              id="fund-amount"
-              type="number"
-              min="1"
-              className="form-input"
-              value={fundAmount}
-              onChange={(e) => setFundAmount(Math.max(1, parseInt(e.target.value) || 0))}
-              required
-            />
-          </div>
-
-          {/* Dynamic Credentials Inputs */}
-          {paymentMode === 'UPI' && (
-            <div className="form-group animate-fade" style={{ marginBottom: '24px' }}>
-              <label htmlFor="upi-id" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>UPI ID</label>
+            {/* Manual Amount */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label htmlFor="dep-amount" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Amount ($)</label>
               <input
-                id="upi-id"
-                type="text"
+                id="dep-amount"
+                type="number"
+                min="1"
                 className="form-input"
-                placeholder="username@bank"
-                value={upiId}
-                onChange={(e) => setUpiId(e.target.value)}
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(Math.max(1, parseInt(e.target.value) || 0))}
                 required
               />
             </div>
-          )}
 
-          {paymentMode === 'NET_BANKING' && (
-            <div className="animate-fade" style={{ marginBottom: '24px' }}>
-              <div className="form-group" style={{ marginBottom: '12px' }}>
-                <label htmlFor="bank-select" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Select Bank</label>
+            {/* Dynamic Credentials Inputs */}
+            {depositMode === 'UPI' && (
+              <div className="form-group animate-fade" style={{ marginBottom: '20px', padding: '10px 14px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '4px', border: '1px dashed var(--border-color)' }}>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                  Proceed to complete deposit via secure UPI gateway.
+                </p>
+              </div>
+            )}
+
+            {depositMode === 'NET_BANKING' && (
+              <div className="form-group animate-fade" style={{ marginBottom: '20px' }}>
+                <label htmlFor="dep-bank-select" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Select Bank</label>
                 <select
-                  id="bank-select"
+                  id="dep-bank-select"
                   className="form-input"
-                  value={selectedBank}
-                  onChange={(e) => setSelectedBank(e.target.value)}
+                  value={depSelectedBank}
+                  onChange={(e) => setDepSelectedBank(e.target.value)}
                   required
                 >
                   <option value="State Bank of India">State Bank of India</option>
@@ -287,86 +253,244 @@ export default function Funds() {
                   <option value="Federal Bank">Federal Bank</option>
                 </select>
               </div>
-              {fundAction === 'WITHDRAW' && (
-                <div className="form-group">
-                  <label htmlFor="bank-acct" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Bank Account Number</label>
+            )}
+
+            {depositMode === 'CARD' && (
+              <div className="animate-fade" style={{ marginBottom: '20px' }}>
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label htmlFor="dep-card-num" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Card Number</label>
                   <input
-                    id="bank-acct"
+                    id="dep-card-num"
+                    type="text"
+                    maxLength="16"
+                    className="form-input"
+                    placeholder="1234567890123456"
+                    value={depCardNumber}
+                    onChange={(e) => setDepCardNumber(e.target.value)}
+                    required
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="form-group">
+                    <label htmlFor="dep-card-exp" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Expiry Date</label>
+                    <input
+                      id="dep-card-exp"
+                      type="text"
+                      maxLength="5"
+                      placeholder="MM/YY"
+                      className="form-input"
+                      value={depCardExpiry}
+                      onChange={(e) => setDepCardExpiry(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="dep-card-cvv" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>CVV</label>
+                    <input
+                      id="dep-card-cvv"
+                      type="password"
+                      maxLength="3"
+                      placeholder="***"
+                      className="form-input"
+                      value={depCardCvv}
+                      onChange={(e) => setDepCardCvv(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="portfolio-btn"
+              style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}
+              disabled={loading || !user?.isVerified}
+            >
+              {loading ? 'Processing Deposit...' : `Deposit ${formatCurrency(depositAmount)}`}
+            </button>
+          </form>
+        </div>
+
+        {/* Column 2: Withdraw Funds Form */}
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 8px 0', fontSize: '18px' }}>📤 Withdraw Funds</h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px 0' }}>
+            Withdraw money from your cash balance.
+          </p>
+
+          {withError && <div className="status-message error" style={{ marginBottom: '16px' }}>{withError}</div>}
+          {withSuccess && <div className="status-message success" style={{ marginBottom: '16px' }}>{withSuccess}</div>}
+
+          <form onSubmit={handleWithdrawSubmit}>
+            {/* Payment Method Selector */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Payment Mode</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {['UPI', 'NET_BANKING', 'CARD'].map(mode => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => { setWithdrawMode(mode); setWithError(''); setWithSuccess(''); }}
+                    style={{
+                      flex: 1,
+                      padding: '10px 4px',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      background: withdrawMode === mode ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                      color: '#fff',
+                      border: '1px solid var(--border-color)'
+                    }}
+                  >
+                    {mode === 'UPI' && '📱 UPI'}
+                    {mode === 'NET_BANKING' && '🏦 Net Bank'}
+                    {mode === 'CARD' && '💳 Card'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Amount Selections */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Quick Select Amount</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                {[1000, 5000, 10000, 50000].map(amt => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => { setWithdrawAmount(amt); setWithError(''); }}
+                    style={{
+                      padding: '8px 2px',
+                      background: withdrawAmount === amt ? 'rgba(99, 102, 241, 0.2)' : 'var(--bg-tertiary)',
+                      border: withdrawAmount === amt ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-sm)',
+                      color: '#fff',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ${amt.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Manual Amount */}
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label htmlFor="with-amount" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Amount ($)</label>
+              <input
+                id="with-amount"
+                type="number"
+                min="1"
+                className="form-input"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(Math.max(1, parseInt(e.target.value) || 0))}
+                required
+              />
+            </div>
+
+            {/* Dynamic Credentials Inputs */}
+            {withdrawMode === 'UPI' && (
+              <div className="form-group animate-fade" style={{ marginBottom: '20px', padding: '10px 14px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '4px', border: '1px dashed var(--border-color)' }}>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                  Proceed to complete withdrawal to your linked UPI address.
+                </p>
+              </div>
+            )}
+
+            {withdrawMode === 'NET_BANKING' && (
+              <div className="animate-fade" style={{ marginBottom: '20px' }}>
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label htmlFor="with-bank-select" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Select Bank</label>
+                  <select
+                    id="with-bank-select"
+                    className="form-input"
+                    value={withSelectedBank}
+                    onChange={(e) => setWithSelectedBank(e.target.value)}
+                    required
+                  >
+                    <option value="State Bank of India">State Bank of India</option>
+                    <option value="HDFC Bank">HDFC Bank</option>
+                    <option value="ICICI Bank">ICICI Bank</option>
+                    <option value="Axis Bank">Axis Bank</option>
+                    <option value="Federal Bank">Federal Bank</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="with-bank-acct" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Bank Account Number</label>
+                  <input
+                    id="with-bank-acct"
                     type="text"
                     placeholder="1234567890"
                     className="form-input"
-                    value={bankAccountNum}
-                    onChange={(e) => setBankAccountNum(e.target.value)}
+                    value={withBankAccountNum}
+                    onChange={(e) => setWithBankAccountNum(e.target.value)}
                     required
                   />
                 </div>
-              )}
-            </div>
-          )}
-
-          {paymentMode === 'CARD' && (
-            <div className="animate-fade" style={{ marginBottom: '24px' }}>
-              <div className="form-group" style={{ marginBottom: '12px' }}>
-                <label htmlFor="card-num" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Card Number</label>
-                <input
-                  id="card-num"
-                  type="text"
-                  maxLength="16"
-                  className="form-input"
-                  placeholder="1234567890123456"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  required
-                />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group">
-                  <label htmlFor="card-exp" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Expiry Date</label>
+            )}
+
+            {withdrawMode === 'CARD' && (
+              <div className="animate-fade" style={{ marginBottom: '20px' }}>
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label htmlFor="with-card-num" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Card Number</label>
                   <input
-                    id="card-exp"
+                    id="with-card-num"
                     type="text"
-                    maxLength="5"
-                    placeholder="MM/YY"
+                    maxLength="16"
                     className="form-input"
-                    value={cardExpiry}
-                    onChange={(e) => setCardExpiry(e.target.value)}
+                    placeholder="1234567890123456"
+                    value={withCardNumber}
+                    onChange={(e) => setWithCardNumber(e.target.value)}
                     required
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="card-cvv" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>CVV</label>
-                  <input
-                    id="card-cvv"
-                    type="password"
-                    maxLength="3"
-                    placeholder="***"
-                    className="form-input"
-                    value={cardCvv}
-                    onChange={(e) => setCardCvv(e.target.value)}
-                    required
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="form-group">
+                    <label htmlFor="with-card-exp" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Expiry Date</label>
+                    <input
+                      id="with-card-exp"
+                      type="text"
+                      maxLength="5"
+                      placeholder="MM/YY"
+                      className="form-input"
+                      value={withCardExpiry}
+                      onChange={(e) => setWithCardExpiry(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="with-card-cvv" style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>CVV</label>
+                    <input
+                      id="with-card-cvv"
+                      type="password"
+                      maxLength="3"
+                      placeholder="***"
+                      className="form-input"
+                      value={withCardCvv}
+                      onChange={(e) => setWithCardCvv(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <button
-            type="submit"
-            className="portfolio-btn"
-            style={{ width: '100%', padding: '14px', fontSize: '15px', fontWeight: 'bold' }}
-            disabled={loading || !user?.isVerified}
-          >
-            {loading 
-              ? `${fundAction === 'DEPOSIT' ? 'Processing Deposit...' : 'Processing Withdrawal...'}` 
-              : `${fundAction === 'DEPOSIT' ? `Deposit ${formatCurrency(fundAmount)}` : `Withdraw ${formatCurrency(fundAmount)}`}`
-            }
-          </button>
-          {user && !user.isVerified && (
-            <p style={{ color: 'var(--accent-danger)', fontSize: '11px', textAlign: 'center', marginTop: '12px' }}>
-              Please verify your account email to unlock funds management capabilities.
-            </p>
-          )}
-        </form>
+            <button
+              type="submit"
+              className="portfolio-btn"
+              style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}
+              disabled={loading || !user?.isVerified}
+            >
+              {loading ? 'Processing Withdrawal...' : `Withdraw ${formatCurrency(withdrawAmount)}`}
+            </button>
+          </form>
+        </div>
+
       </div>
 
     </div>
