@@ -450,7 +450,6 @@ export default function StockChart() {
                   disabled={
                     tradingLoading ||
                     !activePortfolio ||
-                    !user.isVerified ||
                     (tradeType === 'BUY' && user.virtualCashBalance < selectedStock.currentPrice * quantity) ||
                     (tradeType === 'SELL' && getHoldingQuantity(selectedStock.ticker) < quantity)
                   }

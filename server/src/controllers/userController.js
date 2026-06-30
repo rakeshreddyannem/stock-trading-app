@@ -48,7 +48,7 @@ const registerUser = async (req, res) => {
             email,
             password: hashedPassword,
             userType: userType || 'user',
-            isVerified: false,
+            isVerified: true,
             verificationToken,
             verificationTokenExpires
         });
@@ -113,16 +113,7 @@ const loginUser = async (req, res) => {
 
             logSecurity('LOGIN_CREDENTIALS_OK', email, req.ip, `MFA Active: ${user.isMfaEnabled}`);
 
-            if (user.isMfaEnabled) {
-                // Return temp JWT for MFA validation
-                const mfaToken = generateTempMfaToken(user._id);
-                return res.json({
-                    requiresMfa: true,
-                    mfaToken
-                });
-            }
-
-            // Normal login
+            // Normal login (MFA bypassed)
             res.json({
                 _id: user._id,
                 username: user.username,

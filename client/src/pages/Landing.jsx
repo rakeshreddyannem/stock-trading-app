@@ -13,28 +13,6 @@ export default function Landing() {
 
   return (
     <div className="landing-wrapper animate-fade">
-      {/* Index Ticker Marquee */}
-      <div className="ticker-container">
-        <div className="ticker-wrapper">
-          <div className="ticker-slide">
-            <span className="ticker-item">NASDAQ 16,420.50 <span className="up">▲ +1.24%</span></span>
-            <span className="ticker-item">S&P 500 5,130.20 <span className="up">▲ +0.81%</span></span>
-            <span className="ticker-item">DOW JONES 39,120.10 <span className="down">▼ -0.34%</span></span>
-            <span className="ticker-item">NIFTY 50 22,450.30 <span className="up">▲ +0.55%</span></span>
-            <span className="ticker-item">SENSEX 73,890.10 <span className="up">▲ +0.47%</span></span>
-            <span className="ticker-item">FTSE 100 7,930.40 <span className="down">▼ -0.12%</span></span>
-          </div>
-          <div className="ticker-slide">
-            <span className="ticker-item">NASDAQ 16,420.50 <span className="up">▲ +1.24%</span></span>
-            <span className="ticker-item">S&P 500 5,130.20 <span className="up">▲ +0.81%</span></span>
-            <span className="ticker-item">DOW JONES 39,120.10 <span className="down">▼ -0.34%</span></span>
-            <span className="ticker-item">NIFTY 50 22,450.30 <span className="up">▲ +0.55%</span></span>
-            <span className="ticker-item">SENSEX 73,890.10 <span className="up">▲ +0.47%</span></span>
-            <span className="ticker-item">FTSE 100 7,930.40 <span className="down">▼ -0.12%</span></span>
-          </div>
-        </div>
-      </div>
-
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
@@ -55,6 +33,54 @@ export default function Landing() {
         
         <div className="hero-graphic">
           <img src="/hero-illustration.png" alt="Futuristic Stock Charts Isometric Illustration" />
+        </div>
+      </section>
+
+      {/* About & Workflow Section */}
+      <section className="about-app-section" style={{ padding: '60px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', background: 'rgba(255, 255, 255, 0.01)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'flex-start' }}>
+          
+          {/* Why This App */}
+          <div>
+            <h2 style={{ fontSize: '28px', fontFamily: 'var(--font-display)', fontWeight: 800, marginBottom: '16px', color: 'var(--accent-primary)' }}>Why SB Stocks?</h2>
+            <p style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Investing in financial markets can be intimidating for beginners and challenging for seasoned traders looking to test new systems. SB Stocks was built to bridge this gap.
+            </p>
+            <p style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
+              We provide a fully simulated environment that mirrors the mechanics of real-world stock trading. By removing the financial risk, users can build confidence, understand market dynamics, test Dollar Cost Averaging (DCA), and explore strategic bracket orders without losing a single cent of real money.
+            </p>
+          </div>
+
+          {/* How It Works */}
+          <div>
+            <h2 style={{ fontSize: '28px', fontFamily: 'var(--font-display)', fontWeight: 800, marginBottom: '24px' }}>How It Works</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '36px', height: '36px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontWeight: 'bold', fontSize: '16px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>1</div>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '4px' }}>Create an Account</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>Join SB Stocks instantly by choosing a username and password. No KYC, credit card, or verification needed.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '36px', height: '36px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.1)', color: 'var(--accent-success)', fontWeight: 'bold', fontSize: '16px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>2</div>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '4px' }}>Get $10,000 Mock Balance</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>Your account is instantly credited with $10,000 in virtual funds. Use it to buy and sell stocks in the simulator.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '36px', height: '36px', borderRadius: '50%', background: 'rgba(168, 85, 247, 0.1)', color: 'var(--accent-primary)', fontWeight: 'bold', fontSize: '16px', border: '1px solid rgba(168, 85, 247, 0.2)' }}>3</div>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '4px' }}>Analyze & Build Portfolios</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>Organize holdings into thematic portfolios, study price actions, and execute trades in our Strategy Lab.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 

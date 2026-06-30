@@ -87,14 +87,13 @@ export default function Navbar() {
       ) : (
         <>
           <nav className="landing-nav">
-            <a href="#features">Features</a>
-            <a href="#market" onClick={() => { setShowAuth(true); setIsRegister(false); }}>Simulator</a>
-            <a href="#strategy" onClick={() => { setShowAuth(true); setIsRegister(false); }}>Strategy Lab</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowAuth(false); handleTabChange('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Home</a>
+            <a href="#features" onClick={() => { setShowAuth(false); handleTabChange('landing'); }}>About</a>
           </nav>
 
           <div className="landing-actions">
             <button className="landing-signin-btn" onClick={() => { setIsRegister(false); setShowAuth(true); setError(''); setSuccess(''); }}>Sign In</button>
-            <button className="landing-cta-btn" onClick={() => { setIsRegister(true); setShowAuth(true); setError(''); setSuccess(''); }}>Get Started</button>
+            <button className="landing-cta-btn" onClick={() => { setIsRegister(true); setShowAuth(true); setError(''); setSuccess(''); }}>Join Now</button>
           </div>
         </>
       )}

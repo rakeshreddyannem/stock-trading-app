@@ -1098,15 +1098,67 @@
   color: #a7f3d0;
 }
 
-/* Animations */
+/* Animations & Smooth Transitions */
 .animate-fade {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card Entrance Animations */
+.card, .auth-card, .feature-card, .stock-card {
+  animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Tab button indicator transitions */
+.nav-tab-btn, .landing-nav a, .ticker-item, .portfolio-item, .stock-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* General button scale hover and click animations */
+button, .landing-cta-btn, .hero-btn-primary, .hero-btn-secondary, .portfolio-btn, .auth-btn, .logout-btn {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:hover, .landing-cta-btn:hover, .hero-btn-primary:hover, .hero-btn-secondary:hover, .portfolio-btn:hover, .auth-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+button:active, .landing-cta-btn:active, .hero-btn-primary:active, .hero-btn-secondary:active, .portfolio-btn:active, .auth-btn:active {
+  transform: translateY(1px);
+  filter: brightness(0.95);
+}
+
+/* Table Row Entrances */
+tr {
+  animation: tableRowEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes tableRowEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;

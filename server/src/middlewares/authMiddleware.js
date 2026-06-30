@@ -40,11 +40,7 @@ const admin = (req, res, next) => {
 };
 
 const verified = (req, res, next) => {
-    if (req.user && req.user.isVerified) {
-        next();
-    } else {
-        res.status(403).json({ message: 'Please verify your email address to perform this action.' });
-    }
+    next();
 };
 
 module.exports = { protect, admin, verified };

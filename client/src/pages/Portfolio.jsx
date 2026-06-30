@@ -40,7 +40,7 @@ export default function Portfolio() {
             maxLength="40"
             required
           />
-          <button type="submit" className="portfolio-btn" disabled={!user.isVerified} style={{ whiteSpace: 'nowrap' }}>Create Portfolio</button>
+          <button type="submit" className="portfolio-btn" style={{ whiteSpace: 'nowrap' }}>Create Portfolio</button>
         </form>
 
         {portfolios.length === 0 ? (

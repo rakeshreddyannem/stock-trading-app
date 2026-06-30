@@ -305,7 +305,7 @@ export default function Funds() {
               type="submit"
               className="portfolio-btn"
               style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}
-              disabled={loading || !user?.isVerified}
+              disabled={loading}
             >
               {loading ? 'Processing Deposit...' : `Deposit ${formatCurrency(depositAmount)}`}
             </button>
@@ -484,7 +484,7 @@ export default function Funds() {
               type="submit"
               className="portfolio-btn"
               style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: 'bold' }}
-              disabled={loading || !user?.isVerified}
+              disabled={loading}
             >
               {loading ? 'Processing Withdrawal...' : `Withdraw ${formatCurrency(withdrawAmount)}`}
             </button>
