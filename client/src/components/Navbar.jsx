@@ -1,6 +1,15 @@
 import React, { useContext } from 'react';
 import { GeneralContext } from '../context/GeneralContext';
 
+const TABS = [
+  { key: 'home',     label: 'Dashboard',     icon: '⊞' },
+  { key: 'portfolio', label: 'Portfolio',    icon: '◈' },
+  { key: 'funds',    label: 'Funds',         icon: '◎' },
+  { key: 'chart',    label: 'Stock Chart',   icon: '↗' },
+  { key: 'strategy', label: 'Strategy Lab',  icon: '⚗' },
+  { key: 'history',  label: 'Ledger',        icon: '≡' },
+];
+
 export default function Navbar() {
   const {
     user,
@@ -10,90 +19,144 @@ export default function Navbar() {
     setIsRegister,
     setError,
     setSuccess,
-    handleLogout
+    handleLogout,
   } = useContext(GeneralContext);
 
-  const handleTabChange = (page) => {
+  const go = (page) => {
     setCurrentPage(page);
     setError('');
     setSuccess('');
   };
 
+  const isAdminActive = ['admin', 'users', 'all-orders', 'all-transactions'].includes(currentPage);
+
   return (
     <nav className="navbar">
-      <div className="nav-brand" style={{ cursor: 'pointer' }} onClick={() => handleTabChange(user ? 'home' : 'landing')}>
+      {/* Brand */}
+      <div
+        className="nav-brand"
+        style={{ cursor: 'pointer', userSelect: 'none' }}
+        onClick={() => go(user ? 'home' : 'landing')}
+      >
         <div className="nav-logo" style={{ overflow: 'hidden' }}>
-          <img src="/logo.png" alt="SB Stocks Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img
+            src="/logo.png"
+            alt="SB Stocks"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         </div>
-        <span>SB Stocks</span>
+        <span style={{
+          fontFamily: 'var(--font-display)',
+          fontWeight: 800,
+          fontSize: '18px',
+          letterSpacing: '-0.3px',
+          background: 'linear-gradient(135deg, #fff 40%, #a5b4fc 100%)',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}>
+          SB Stocks
+        </span>
       </div>
 
       {user ? (
         <>
-          {/* Navigation Tabs */}
+          {/* Pill-style tab bar */}
           <div className="dashboard-nav-tabs">
-            <button 
-              className={`nav-tab-btn ${currentPage === 'home' ? 'active' : ''}`}
-              onClick={() => handleTabChange('home')}
-            >
-              Dashboard
-            </button>
-            <button 
-              className={`nav-tab-btn ${currentPage === 'portfolio' ? 'active' : ''}`}
-              onClick={() => handleTabChange('portfolio')}
-            >
-              My Portfolio
-            </button>
-            <button 
-              className={`nav-tab-btn ${currentPage === 'funds' ? 'active' : ''}`}
-              onClick={() => handleTabChange('funds')}
-            >
-              Funds
-            </button>
-            <button 
-              className={`nav-tab-btn ${currentPage === 'strategy' ? 'active' : ''}`}
-              onClick={() => handleTabChange('strategy')}
-            >
-              Strategy Lab
-            </button>
-            <button 
-              className={`nav-tab-btn ${currentPage === 'history' ? 'active' : ''}`}
-              onClick={() => handleTabChange('history')}
-            >
-              Ledger History
-            </button>
-            {user.userType === 'admin' && (
-              <button 
-                className={`nav-tab-btn ${['admin', 'users', 'all-orders', 'all-transactions'].includes(currentPage) ? 'active' : ''}`}
-                onClick={() => handleTabChange('admin')}
-                style={{ color: 'var(--accent-primary)', borderBottomColor: 'var(--accent-primary)' }}
+            {TABS.map(({ key, label, icon }) => (
+              <button
+                key={key}
+                className={`nav-tab-btn ${currentPage === key ? 'active' : ''}`}
+                onClick={() => go(key)}
+                title={label}
               >
-                Admin Panel
+                <span style={{ marginRight: '5px', opacity: 0.7, fontSize: '11px' }}>{icon}</span>
+                {label}
+              </button>
+            ))}
+
+            {/* Admin tab – only shown for admin users */}
+            {user.userType === 'admin' && (
+              <button
+                className={`nav-tab-btn ${isAdminActive ? 'active' : ''}`}
+                onClick={() => go('admin')}
+                style={{
+                  color: isAdminActive ? 'var(--accent-primary)' : 'var(--accent-primary)',
+                  opacity: isAdminActive ? 1 : 0.7,
+                }}
+              >
+                <span style={{ marginRight: '5px', fontSize: '11px' }}>👑</span>
+                Admin
               </button>
             )}
           </div>
 
-          <div className="nav-user" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <span 
-              className="user-tag" 
-              style={{ cursor: 'pointer', border: currentPage === 'profile' ? '1px solid var(--accent-primary)' : 'none' }}
-              onClick={() => handleTabChange('profile')}
+          {/* Right side – user tag + logout */}
+          <div className="nav-user">
+            <button
+              className="user-tag"
+              style={{
+                cursor: 'pointer',
+                border: currentPage === 'profile'
+                  ? '1px solid var(--accent-primary)'
+                  : '1px solid var(--border-color)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 12px',
+              }}
+              onClick={() => go('profile')}
+              title="View profile"
             >
-              👤 {user.username}
-            </span>
-            <button className="logout-btn" onClick={handleLogout}>Log Out</button>
+              <span style={{ fontSize: '14px' }}>👤</span>
+              <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user.username}
+              </span>
+            </button>
+
+            <button
+              className="logout-btn"
+              onClick={handleLogout}
+            >
+              Sign Out
+            </button>
           </div>
         </>
       ) : (
         <>
           <nav className="landing-nav">
-            <a href="#" onClick={(e) => { e.preventDefault(); setShowAuth(false); handleTabChange('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Home</a>
-            <a href="#features" onClick={() => { setShowAuth(false); handleTabChange('landing'); }}>About</a>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowAuth(false);
+                go('landing');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              Home
+            </a>
+            <a
+              href="#features"
+              onClick={() => { setShowAuth(false); go('landing'); }}
+            >
+              About
+            </a>
           </nav>
 
           <div className="landing-actions">
-            <button className="landing-signin-btn" onClick={() => { setIsRegister(false); setShowAuth(true); setError(''); setSuccess(''); }}>Sign In</button>
-            <button className="landing-cta-btn" onClick={() => { setIsRegister(true); setShowAuth(true); setError(''); setSuccess(''); }}>Join Now</button>
+            <button
+              className="landing-signin-btn"
+              onClick={() => { setIsRegister(false); setShowAuth(true); setError(''); setSuccess(''); }}
+            >
+              Sign In
+            </button>
+            <button
+              className="landing-cta-btn"
+              onClick={() => { setIsRegister(true); setShowAuth(true); setError(''); setSuccess(''); }}
+            >
+              Join Now
+            </button>
           </div>
         </>
       )}

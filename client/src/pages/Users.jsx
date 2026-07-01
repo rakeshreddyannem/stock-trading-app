@@ -32,7 +32,6 @@ export default function Users() {
                 <th>Role</th>
                 <th>Cash Balance</th>
                 <th>Verified Status</th>
-                <th>MFA (2FA) Status</th>
               </tr>
             </thead>
             <tbody>
@@ -49,11 +48,6 @@ export default function Users() {
                   <td>
                     <span className="badge" style={{ background: userItem.isVerified ? 'var(--accent-success)' : 'var(--accent-danger)', color: '#fff' }}>
                       {userItem.isVerified ? 'VERIFIED' : 'UNVERIFIED'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="badge" style={{ background: userItem.isMfaEnabled ? 'var(--accent-success)' : 'rgba(255,255,255,0.05)', color: '#fff' }}>
-                      {userItem.isMfaEnabled ? 'ENABLED' : 'DISABLED'}
                     </span>
                   </td>
                 </tr>

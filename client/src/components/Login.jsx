@@ -5,9 +5,6 @@ export default function Login() {
   const {
     email, setEmail,
     password, setPassword,
-    mfaCode, setMfaCode,
-    tempMfaToken, setTempMfaToken,
-    showMfaLogin, setShowMfaLogin,
     showForgotPassword, setShowForgotPassword,
     forgotEmail, setForgotEmail,
     demoResetLink, setDemoResetLink,
@@ -15,7 +12,6 @@ export default function Login() {
     success, setSuccess,
     loading,
     handleLogin,
-    handleMfaLogin,
     handleForgotPassword,
     setIsRegister,
     setShowAuth
@@ -28,12 +24,7 @@ export default function Login() {
           <img src="/logo.png" alt="SB Stocks Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
         
-        {showMfaLogin ? (
-          <>
-            <h1>2-Step Verification</h1>
-            <p>Enter the 6-digit verification code from your authenticator app.</p>
-          </>
-        ) : showForgotPassword ? (
+        {showForgotPassword ? (
           <>
             <h1>Recover Password</h1>
             <p>Enter your email to receive a password reset link.</p>
@@ -49,39 +40,8 @@ export default function Login() {
       {error && <div className="status-message error">{error}</div>}
       {success && <div className="status-message success">{success}</div>}
 
-      {/* MFA Challenge Login Form */}
-      {showMfaLogin && (
-        <form onSubmit={handleMfaLogin}>
-          <div className="form-group">
-            <label htmlFor="mfa-code">Authenticator 2FA Code</label>
-            <input
-              id="mfa-code"
-              type="text"
-              maxLength="6"
-              pattern="\d{6}"
-              className="form-input"
-              value={mfaCode}
-              onChange={(e) => setMfaCode(e.target.value)}
-              placeholder="123456"
-              required
-            />
-          </div>
-          <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? 'Verifying...' : 'Verify & Sign In'}
-          </button>
-          <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <span 
-              onClick={() => { setShowMfaLogin(false); setTempMfaToken(''); setError(''); setSuccess(''); }} 
-              style={{ color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '13px', textDecoration: 'underline' }}
-            >
-              Back to Sign In
-            </span>
-          </div>
-        </form>
-      )}
-
       {/* Forgot Password Request Form */}
-      {!showMfaLogin && showForgotPassword && (
+      {showForgotPassword && (
         <form onSubmit={handleForgotPassword}>
           <div className="form-group">
             <label htmlFor="forgot-email">Email Address</label>
@@ -122,7 +82,7 @@ export default function Login() {
       )}
 
       {/* Normal Login Form */}
-      {!showMfaLogin && !showForgotPassword && (
+      {!showForgotPassword && (
         <>
           <form onSubmit={handleLogin}>
             <div className="form-group">

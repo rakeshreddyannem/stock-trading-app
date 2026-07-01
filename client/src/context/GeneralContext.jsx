@@ -15,13 +15,6 @@ export function GeneralContextProvider({ children }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  // MFA states
-  const [mfaSecret, setMfaSecret] = useState('')
-  const [mfaQrCode, setMfaQrCode] = useState('')
-  const [mfaCode, setMfaCode] = useState('')
-  const [tempMfaToken, setTempMfaToken] = useState('')
-  const [showMfaLogin, setShowMfaLogin] = useState(false)
-
   // Forgot / Reset password states
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [forgotEmail, setForgotEmail] = useState('')
@@ -106,7 +99,6 @@ export function GeneralContextProvider({ children }) {
       setSimulationResult(null)
       setDemoVerificationLink('')
       setDemoResetLink('')
-      setShowMfaLogin(false)
       setAllUsers([])
       setAllOrders([])
       setAllTransactions([])
@@ -187,18 +179,12 @@ export function GeneralContextProvider({ children }) {
     setLoading(true);
     try {
       const res = await axiosInstance.post('/api/auth/login', { email, password });
-      if (res.data.requiresMfa) {
-        setTempMfaToken(res.data.mfaToken);
-        setShowMfaLogin(true);
-        setSuccess('Please enter your 2-Factor Authentication code.');
-      } else {
-        setUser(res.data);
-        setSuccess('Logged in successfully!');
-        setShowAuth(false);
-        setUsername('');
-        setEmail('');
-        setPassword('');
-      }
+      setUser(res.data);
+      setSuccess('Logged in successfully!');
+      setShowAuth(false);
+      setUsername('');
+      setEmail('');
+      setPassword('');
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Authentication failed');
     } finally {
@@ -227,25 +213,6 @@ export function GeneralContextProvider({ children }) {
     }
   }
 
-  const handleMfaLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
-    try {
-      const res = await axiosInstance.post('/api/auth/mfa/login-verify', { mfaToken: tempMfaToken, code: mfaCode });
-      setUser(res.data);
-      setSuccess('Logged in successfully with 2FA!');
-      setShowMfaLogin(false);
-      setTempMfaToken('');
-      setMfaCode('');
-      setShowAuth(false);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Invalid MFA code');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
@@ -305,56 +272,6 @@ export function GeneralContextProvider({ children }) {
       setError(err.response?.data?.message || err.message || 'Failed to resend verification');
     } finally {
       setLoading(false);
-    }
-  }
-
-  const handleSetupMfa = async () => {
-    setError('');
-    setSuccess('');
-    try {
-      const res = await axiosInstance.post('/api/auth/mfa/setup');
-      setMfaSecret(res.data.secret);
-      setMfaQrCode(res.data.qrCode);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to initiate MFA setup');
-    }
-  }
-
-  const handleVerifyEnableMfa = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    try {
-      const res = await axiosInstance.post('/api/auth/mfa/verify', { code: mfaCode });
-      setSuccess(res.data.message || 'MFA enabled successfully!');
-      setUser(current => {
-        const updated = { ...current, isMfaEnabled: true };
-        localStorage.setItem('user_session', JSON.stringify(updated));
-        return updated;
-      });
-      setMfaSecret('');
-      setMfaQrCode('');
-      setMfaCode('');
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to verify MFA code');
-    }
-  }
-
-  const handleDisableMfa = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    try {
-      const res = await axiosInstance.post('/api/auth/mfa/disable', { code: mfaCode });
-      setSuccess(res.data.message || 'MFA disabled successfully!');
-      setUser(current => {
-        const updated = { ...current, isMfaEnabled: false };
-        localStorage.setItem('user_session', JSON.stringify(updated));
-        return updated;
-      });
-      setMfaCode('');
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to disable MFA');
     }
   }
 
@@ -479,8 +396,22 @@ export function GeneralContextProvider({ children }) {
     setError('');
     setCurrentPage('landing');
     setShowAuth(false);
-    setShowMfaLogin(false);
-    setTempMfaToken('');
+  }
+
+  const handleChangePassword = async (currentPassword, newPassword) => {
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    try {
+      const res = await axiosInstance.post('/api/auth/change-password', { currentPassword, newPassword });
+      setSuccess(res.data.message || 'Password updated successfully!');
+      return true;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to update password');
+      return false;
+    } finally {
+      setLoading(false);
+    }
   }
 
   const handleVerifyEmailToken = async (token) => {
@@ -514,12 +445,6 @@ export function GeneralContextProvider({ children }) {
       username, setUsername,
       email, setEmail,
       password, setPassword,
-      
-      mfaSecret, setMfaSecret,
-      mfaQrCode, setMfaQrCode,
-      mfaCode, setMfaCode,
-      tempMfaToken, setTempMfaToken,
-      showMfaLogin, setShowMfaLogin,
 
       showForgotPassword, setShowForgotPassword,
       forgotEmail, setForgotEmail,
@@ -571,19 +496,16 @@ export function GeneralContextProvider({ children }) {
       fetchAdminData,
       handleLogin,
       handleRegister,
-      handleMfaLogin,
       handleForgotPassword,
       handleResetPassword,
       handleResendVerification,
-      handleSetupMfa,
-      handleVerifyEnableMfa,
-      handleDisableMfa,
       handleCreatePortfolio,
       handleTradeSubmit,
       handleDeposit,
       handleWithdraw,
       handleLogout,
-      handleVerifyEmailToken
+      handleVerifyEmailToken,
+      handleChangePassword
     }}>
       {children}
     </GeneralContext.Provider>

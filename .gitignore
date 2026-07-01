@@ -13,3 +13,7 @@ Thumbs.db
 
 # Build output
 client/dist/
+
+# Project documentation folder (ignored in favor of the ZIP file)
+project documetation/
+

@@ -543,6 +543,39 @@ const withdrawFunds = async (req, res) => {
     }
 };
 
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const user = await User.findById(req.user._id);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Incorrect current password' });
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({
+                message: 'New password is too weak. It must be at least 8 characters long and contain at least one uppercase, lowercase, digit, and special character.'
+            });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        logSecurity('PASSWORD_CHANGE_SUCCESS', user.email, req.ip);
+        res.json({ message: 'Password updated successfully!' });
+    } catch (error) {
+        logger.error(`Change password error: ${error.message}`);
+        res.status(500).json({ message: 'Failed to update password' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -558,5 +591,6 @@ module.exports = {
     loginVerifyMfa,
     getAllUsers,
     depositFunds,
-    withdrawFunds
+    withdrawFunds,
+    changePassword
 };

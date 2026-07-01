@@ -7,6 +7,7 @@ import Portfolio from './pages/Portfolio';
 import Profile from './pages/Profile';
 import History from './pages/History';
 import StockChart from './pages/StockChart';
+import StrategyLab from './pages/StrategyLab';
 import Funds from './pages/Funds';
 import Admin from './pages/Admin';
 import Users from './pages/Users';
@@ -92,7 +93,8 @@ function AppContent() {
           {currentPage === 'home' && <Home />}
           {currentPage === 'portfolio' && <Portfolio />}
           {currentPage === 'funds' && <Funds />}
-          {currentPage === 'strategy' && <StockChart />}
+          {currentPage === 'chart' && <StockChart />}
+          {currentPage === 'strategy' && <StrategyLab />}
           {currentPage === 'history' && <History />}
           {currentPage === 'profile' && <Profile />}
           {currentPage === 'admin' && <Admin />}
